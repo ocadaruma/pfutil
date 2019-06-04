@@ -4,6 +4,8 @@ buildscript {
             mavenCentral()
             jcenter()
         }
+
+        lombokVersion = '1.18.8'
     }
 
     repositories repos
@@ -11,16 +13,21 @@ buildscript {
 
 allprojects {
     group 'com.mayreh'
-    version '0.0.1'
+    version '0.0.1-SNAPSHOT'
 }
 
 subprojects {
     apply plugin: 'java'
 
+    repositories repos
+
     dependencies {
-        compileOnly 'org.projectlombok:lombok:1.18.8'
-        annotationProcessor 'org.projectlombok:lombok:1.18.8'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
         testImplementation 'junit:junit:4.12'
+        testImplementation 'org.assertj:assertj-core:3.11.1'
     }
 }
