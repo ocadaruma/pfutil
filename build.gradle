@@ -1,0 +1,26 @@
+buildscript {
+    ext {
+        repos = {
+            mavenCentral()
+            jcenter()
+        }
+    }
+
+    repositories repos
+}
+
+allprojects {
+    group 'com.mayreh'
+    version '0.0.1'
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok:1.18.8'
+        annotationProcessor 'org.projectlombok:lombok:1.18.8'
+
+        testImplementation 'junit:junit:4.12'
+    }
+}
