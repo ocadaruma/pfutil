@@ -1,13 +1,18 @@
-package com.mayreh.pfutil;
+package com.mayreh.pfutil.v4;
+
+import com.mayreh.pfutil.Hll;
+import com.mayreh.pfutil.RedisVersion;
+
+import java.nio.ByteBuffer;
 
 /**
  * Provides Redis v4 compatible HLL features
  */
-public class HLLv4 implements HLL {
-    private byte[] hdr;
+public class HllV4 implements Hll {
+    private ByteBuffer hdrBuffer;
 
-    public HLLv4(byte[] hdr) {
-        this.hdr = hdr;
+    public HllV4(byte[] hdrBytes) {
+        this.hdrBuffer = ByteBuffer.wrap(hdrBytes);
     }
 
     @Override
@@ -15,6 +20,9 @@ public class HLLv4 implements HLL {
         return RedisVersion.V4;
     }
 
+    /**
+     * Cardinality of the single HLL
+     */
     @Override
     public long pfCount() {
         throw new UnsupportedOperationException("to be implemented");
