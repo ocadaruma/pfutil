@@ -62,21 +62,36 @@ public class HlldrTest {
 
     @Test
     public void testIsValidHllObject() throws Exception {
+        Hllhdr.Config config = Hllhdr.Config.builder().build();
+
         // invalid header
         ByteBuffer buffer = ByteBuffer.wrap(new byte[]{});
-        Hllhdr hllhdr = new Hllhdr(buffer);
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isFalse();
 
         // invalid dense size
         buffer = ByteBuffer.wrap(new byte[]{
                 'H','Y','L','L',0x0,0x0,0x0,0x0,(byte)0xe7,(byte)0xd8,0x0,0x0,0x0,0x0,0x0,0x0
         });
-        hllhdr = new Hllhdr(buffer);
+        hllhdr = new Hllhdr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isFalse();
 
         // valid dense size
         buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
-        hllhdr = new Hllhdr(buffer);
+        hllhdr = new Hllhdr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isTrue();
+    }
+
+    @Test
+    public void testDenseHllCount() throws Exception {
+        Hllhdr.Config config = Hllhdr.Config.builder().build();
+
+        ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
+
+        Hllhdr.HllCountResult result = hllhdr.hllCount();
+
+        assertThat(result.isValid()).isTrue();
+        assertThat(result.getCount()).isEqualTo(55527L);
     }
 }

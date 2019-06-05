@@ -1,26 +1,61 @@
 package com.mayreh.pfutil.v4;
 
+import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Java clone of https://github.com/antirez/redis/blob/4.0.10/src/hyperloglog.c
+ */
 public class Hllhdr {
+    private final Config config;
     private final ByteBuffer buffer;
-    private Header header;
+    @Getter
+    private final Header header;
 
     private static final int HEADER_BYTES_LEN = 16;
-    private static final int HLL_P = 14;
-    private static final int HLL_REGISTERS = 1 << HLL_P;
-    private static final int HLL_BITS = 6;
-    private static final int HLL_DENSE_SIZE =
-            HEADER_BYTES_LEN + ((HLL_REGISTERS * HLL_BITS + 7) / 8);
 
     enum Encoding {
         HLL_DENSE,
         HLL_SPARSE,
     }
 
-    public Hllhdr(ByteBuffer buffer) {
+    @Value
+    @Builder
+    public static class Config {
+        int hllSparseMaxBytes = 3000;
+        int hllP = 14;
+        int hllBits = 6;
+
+        public int hllRegisters() {
+            return 1 << hllP;
+        }
+
+        public int hllDenseSize() {
+            return HEADER_BYTES_LEN + ((hllRegisters() * hllBits + 7) / 8);
+        }
+
+        public int hllRegisterMax() {
+            return (1 << hllBits) - 1;
+        }
+    }
+
+    @Value
+    public static class HllCountResult {
+        boolean valid;
+        long count;
+    }
+
+    @Value
+    public static class SumResult {
+        double ez;
+        double E;
+    }
+
+    public Hllhdr(Config config, ByteBuffer buffer) {
+        this.config = config;
         this.buffer = buffer;
         this.header = Header.scan(buffer);
     }
@@ -94,16 +129,53 @@ public class Hllhdr {
 
         // validate dense representation
         if (this.header.encoding == Encoding.HLL_DENSE &&
-                this.buffer.capacity() != HLL_DENSE_SIZE) {
+                this.buffer.capacity() != config.hllDenseSize()) {
             return false;
         }
 
         return true;
     }
 
-    @Value
-    public static class HllCountResult {
-        boolean valid;
-        long count;
+    public HllCountResult hllCount() {
+        // seek to start of data
+        this.buffer.position(HEADER_BYTES_LEN);
+
+        double m = config.hllRegisters();
+        double alpha = 0.7213 / (1 + 1.079 / m);
+        SumResult sum;
+
+        if (this.header.encoding == Encoding.HLL_DENSE) {
+            byte[] registers = new byte[this.buffer.remaining()];
+            this.buffer.get(registers);
+
+            Dense dense = new Dense(config, registers);
+            sum = dense.denseSum();
+        } else {
+            throw new UnsupportedOperationException("to be implemented");
+        }
+
+        double ez = sum.ez;
+        double zl = Math.log(ez + 1);
+        double beta = -0.370393911 * ez +
+                0.070471823 * zl +
+                0.17393686 * Math.pow(zl, 2) +
+                0.16339839 * Math.pow(zl, 3) +
+                -0.09237745 * Math.pow(zl, 4) +
+                0.03738027 * Math.pow(zl, 5) +
+                -0.005384159 * Math.pow(zl, 6) +
+                0.00042419 * Math.pow(zl, 7);
+
+        double result = Math.round(alpha * m * (m - ez) * (1 / (sum.E + beta)));
+        return new HllCountResult(true, (long)result);
     }
+
+//    private double hllDenseSum() {
+//        byte[] registers = new byte[buffer.remaining()];
+//        buffer.get(registers);
+//
+//        Dense dense = new Dense(config, registers);
+//        Dense.SumResult sum = dense.denseSum();
+//
+//
+//    }
 }
