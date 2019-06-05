@@ -18,8 +18,8 @@ class Dense {
         long bitPosFromLSB = regnum * hllBits & 7;
         long bitPosFromLSBInNextByte = 8 - bitPosFromLSB;
 
-        long b0 = (long)registers[byteOffset] & 0xFFL;
-        long b1 = byteOffset < registers.length - 1 ? (long)registers[byteOffset + 1] & 0xFFL : 0;
+        long b0 = (long)registers[byteOffset] & 0xffL;
+        long b1 = byteOffset < registers.length - 1 ? (long)registers[byteOffset + 1] & 0xffL : 0;
 
         return ((b0 >> bitPosFromLSB) | (b1 << bitPosFromLSBInNextByte)) & config.hllRegisterMax();
     }
@@ -37,5 +37,9 @@ class Dense {
         }
         E += ez;
         return new Hllhdr.SumResult(ez, E);
+    }
+
+    public int denseAdd(String element) {
+
     }
 }

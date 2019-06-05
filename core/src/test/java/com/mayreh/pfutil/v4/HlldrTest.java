@@ -66,19 +66,19 @@ public class HlldrTest {
 
         // invalid header
         ByteBuffer buffer = ByteBuffer.wrap(new byte[]{});
-        Hllhdr hllhdr = new Hllhdr(config, buffer);
+        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isFalse();
 
         // invalid dense size
         buffer = ByteBuffer.wrap(new byte[]{
                 'H','Y','L','L',0x0,0x0,0x0,0x0,(byte)0xe7,(byte)0xd8,0x0,0x0,0x0,0x0,0x0,0x0
         });
-        hllhdr = new Hllhdr(config, buffer);
+        hllhdr = Hllhdr.fromRepr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isFalse();
 
         // valid dense size
         buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
-        hllhdr = new Hllhdr(config, buffer);
+        hllhdr = Hllhdr.fromRepr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isTrue();
     }
 
@@ -87,7 +87,7 @@ public class HlldrTest {
         Hllhdr.Config config = Hllhdr.Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
-        Hllhdr hllhdr = new Hllhdr(config, buffer);
+        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
 
         Hllhdr.HllCountResult result = hllhdr.hllCount();
 
@@ -100,11 +100,21 @@ public class HlldrTest {
         Hllhdr.Config config = Hllhdr.Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat"));
-        Hllhdr hllhdr = new Hllhdr(config, buffer);
+        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
 
         Hllhdr.HllCountResult result = hllhdr.hllCount();
 
         assertThat(result.isValid()).isTrue();
         assertThat(result.getCount()).isEqualTo(1002L);
+    }
+
+    @Test
+    public void testCreateEmptyHll() {
+        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+
+        Hllhdr hllhdr = Hllhdr.create(config);
+
+        assertThat(hllhdr.getHeader()).isNotNull();
+        assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_SPARSE);
     }
 }

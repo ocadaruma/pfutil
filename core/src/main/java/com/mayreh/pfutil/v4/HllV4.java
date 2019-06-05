@@ -14,7 +14,7 @@ public class HllV4 implements Hll {
 
     public HllV4(Hllhdr.Config config, byte[] hdrBytes) {
         ByteBuffer hdrBuffer = ByteBuffer.wrap(hdrBytes);
-        hllhdr = new Hllhdr(config, hdrBuffer);
+        hllhdr = Hllhdr.fromRepr(config, hdrBuffer);
 
         if (hllhdr.isValidHllObject()) {
             throw new IllegalArgumentException("Invalid HLL binary");
@@ -33,8 +33,13 @@ public class HllV4 implements Hll {
     public long pfCount() {
         if (hllhdr.getHeader().isValidCache()) {
             return hllhdr.getHeader().getCardinality();
+        } else {
+            Hllhdr.HllCountResult result = hllhdr.hllCount();
+            if (!result.isValid()) {
+                throw new IllegalStateException("hllCount result is invalid");
+            }
+            return result.getCount();
         }
-        throw new UnsupportedOperationException("to be implemented");
     }
 
     @Override

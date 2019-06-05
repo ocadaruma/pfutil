@@ -2,6 +2,7 @@ package com.mayreh.pfutil.v4;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
@@ -15,11 +16,14 @@ public class Hllhdr {
     @Getter
     private final Header header;
 
-    private static final int HEADER_BYTES_LEN = 16;
+    public static final int HEADER_BYTES_LEN = 16;
 
+    @RequiredArgsConstructor
     enum Encoding {
-        HLL_DENSE,
-        HLL_SPARSE,
+        HLL_DENSE((byte)0),
+        HLL_SPARSE((byte)1);
+
+        public final byte value;
     }
 
     @Value
@@ -30,6 +34,8 @@ public class Hllhdr {
         int hllSparseMaxBytes = 3000;
         int hllP = 14;
         int hllBits = 6;
+        int hllSparseZeroMaxLen = 64;
+        int hllSparseXZeroMaxLen = 16384;
 
         public int hllRegisters() {
             return 1 << hllP;
@@ -56,10 +62,32 @@ public class Hllhdr {
         double E;
     }
 
-    public Hllhdr(Config config, ByteBuffer buffer) {
+    private Hllhdr(Config config, ByteBuffer buffer) {
         this.config = config;
         this.buffer = buffer;
         this.header = Header.scan(buffer);
+    }
+
+    /**
+     * Instantiate Hllhdr from existing Redis v4 representation binary
+     */
+    public static Hllhdr fromRepr(Config config, ByteBuffer buffer) {
+        return new Hllhdr(config, buffer);
+    }
+
+    /**
+     * Instantiate empty Hllhdr
+     */
+    public static Hllhdr create(Config config) {
+        int sparseLen = HEADER_BYTES_LEN + (
+                ((config.hllRegisters() + (config.hllSparseXZeroMaxLen - 1)) / config.hllSparseXZeroMaxLen) * 2
+        );
+
+        ByteBuffer buffer = ByteBuffer.allocate(sparseLen);
+        Sparse.initialize(config, buffer);
+
+        buffer.rewind();
+        return new Hllhdr(config, buffer);
     }
 
     @Value
@@ -110,14 +138,14 @@ public class Hllhdr {
             boolean isValidCache = (card[7] & (1<<7)) == 0;
             long cardinality = 0;
             if (isValidCache) {
-                cardinality = (long)card[0] & 0xFFL;
-                cardinality |= ((long)card[1] & 0xFFL) << 8;
-                cardinality |= ((long)card[2] & 0xFFL) << 16;
-                cardinality |= ((long)card[3] & 0xFFL) << 24;
-                cardinality |= ((long)card[4] & 0xFFL) << 32;
-                cardinality |= ((long)card[5] & 0xFFL) << 40;
-                cardinality |= ((long)card[6] & 0xFFL) << 48;
-                cardinality |= ((long)card[7] & 0xFFL) << 56;
+                cardinality = (long)card[0] & 0xffL;
+                cardinality |= ((long)card[1] & 0xffL) << 8;
+                cardinality |= ((long)card[2] & 0xffL) << 16;
+                cardinality |= ((long)card[3] & 0xffL) << 24;
+                cardinality |= ((long)card[4] & 0xffL) << 32;
+                cardinality |= ((long)card[5] & 0xffL) << 40;
+                cardinality |= ((long)card[6] & 0xffL) << 48;
+                cardinality |= ((long)card[7] & 0xffL) << 56;
             }
 
             return new Header(encoding, isValidCache, cardinality);
@@ -179,5 +207,19 @@ public class Hllhdr {
 
         double result = Math.round(alpha * m * (m - ez) * (1 / (sum.E + beta)));
         return new HllCountResult(true, (long)result);
+    }
+
+    public int hllAdd(String element) {
+        this.buffer.position(HEADER_BYTES_LEN);
+        byte[] repr = new byte[this.buffer.remaining()];
+
+        switch (this.header.encoding) {
+            case HLL_DENSE:
+                return new Dense(config, repr).denseAdd(element);
+            case HLL_SPARSE:
+                return new Sparse(config, repr).sparseAdd(element);
+            default:
+                return -1;
+        }
     }
 }
