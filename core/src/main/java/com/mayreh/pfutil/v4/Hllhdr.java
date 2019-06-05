@@ -1,11 +1,13 @@
 package com.mayreh.pfutil.v4;
 
+import com.mayreh.pfutil.HllUtil;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Java clone of https://github.com/antirez/redis/blob/4.0.10/src/hyperloglog.c
@@ -48,6 +50,10 @@ public class Hllhdr {
         public int hllRegisterMax() {
             return (1 << hllBits) - 1;
         }
+
+        public int hllPMask() {
+            return hllRegisters() - 1;
+        }
     }
 
     @Value
@@ -60,6 +66,12 @@ public class Hllhdr {
     public static class SumResult {
         int ez;
         double E;
+    }
+
+    @Value
+    public static class PatLenResult {
+        int len; // the length of the pattern 000..1 of the element hash
+        int reg; // the register index the element hashes to
     }
 
     private Hllhdr(Config config, ByteBuffer buffer) {
@@ -88,6 +100,21 @@ public class Hllhdr {
 
         buffer.rewind();
         return new Hllhdr(config, buffer);
+    }
+
+    static PatLenResult hllPatLen(Config config, byte[] element) {
+        long hash = HllUtil.murmurHash64A(element, 0xadc83b19);
+        long index = hash & config.hllPMask();
+        hash |= (1L << 63);
+
+        long bit = config.hllRegisters();
+
+        int count = 1;
+        while ((hash & bit) == 0) {
+            count++;
+            bit <<= 1;
+        }
+        return new PatLenResult(count, (int)index);
     }
 
     @Value
@@ -178,7 +205,7 @@ public class Hllhdr {
             byte[] registers = new byte[this.buffer.remaining()];
             this.buffer.get(registers);
 
-            Dense dense = new Dense(config, registers);
+            Dense dense = new Dense(config, buffer);
             sum = dense.denseSum();
         } else if (this.header.encoding == Encoding.HLL_SPARSE) {
             byte[] sparseBytes = new byte[this.buffer.remaining()];
@@ -209,17 +236,23 @@ public class Hllhdr {
         return new HllCountResult(true, (long)result);
     }
 
-    public int hllAdd(String element) {
-        this.buffer.position(HEADER_BYTES_LEN);
-        byte[] repr = new byte[this.buffer.remaining()];
-
+    public int hllAdd(byte[] element) {
         switch (this.header.encoding) {
             case HLL_DENSE:
-                return new Dense(config, repr).denseAdd(element);
+                return new Dense(config, buffer).denseAdd(element);
             case HLL_SPARSE:
-                return new Sparse(config, repr).sparseAdd(element);
+                throw new UnsupportedOperationException("to be implemented");
             default:
                 return -1;
         }
+    }
+
+    /**
+     * Returns copy of current HLL representation
+     */
+    public byte[] dump() {
+        buffer.rewind();
+        byte[] src = buffer.array();
+        return Arrays.copyOf(src, src.length);
     }
 }

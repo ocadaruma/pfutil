@@ -36,7 +36,7 @@ class Sparse {
     }
 
     private static int sparseValValue(byte b) {
-        return ((((int)b & 0xff) >> 2) & 0x1f) + 1;
+        return ((((int)b & 0xff) >>> 2) & 0x1f) + 1;
     }
 
     private static int sparseValLen(byte b) {
@@ -46,7 +46,7 @@ class Sparse {
     private static void sparseXZeroSet(ByteBuffer buffer, int len) {
         int _l = len - 1;
 
-        buffer.put((byte)((_l >> 8) | HLL_SPARSE_XZERO_BIT));
+        buffer.put((byte)((_l >>> 8) | HLL_SPARSE_XZERO_BIT));
         buffer.put((byte)(_l & 0xff));
     }
 
@@ -85,8 +85,8 @@ class Sparse {
         return new SparseSumResult(true, new Hllhdr.SumResult(ez, E));
     }
 
-    public int sparseAdd(String element) {
-
+    public int sparseAdd(byte[] element) {
+        throw new UnsupportedOperationException("to be implemented");
     }
 
     /**

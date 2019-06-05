@@ -4,6 +4,7 @@ import com.mayreh.pfutil.TestUtil;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -116,5 +117,32 @@ public class HlldrTest {
 
         assertThat(hllhdr.getHeader()).isNotNull();
         assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_SPARSE);
+    }
+
+    @Test
+    public void testDenseHllAdd() throws Exception {
+        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+
+        ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
+        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+
+        String[] elements = new String[]{
+                "test", "test2", "test3", "test4", "test5", "test6", "test7"
+        };
+        for (String element : elements) {
+            hllhdr.hllAdd(element.getBytes(StandardCharsets.UTF_8));
+        }
+
+        Hllhdr.HllCountResult countResult = hllhdr.hllCount();
+        byte[] newRepr = hllhdr.dump();
+        byte[] reprFromRedis = TestUtil.getResourceAsBytes("v4/dense_nocache_55531.dat");
+
+        // header cache will reprFromRedis by outer layer
+        // so skip header section here
+        for (int i = 16; i < newRepr.length; i++) {
+            assertThat(newRepr[i]).isEqualTo(reprFromRedis[i]);
+        }
+        assertThat(countResult.isValid()).isTrue();
+        assertThat(countResult.getCount()).isEqualTo(55531L);
     }
 }
