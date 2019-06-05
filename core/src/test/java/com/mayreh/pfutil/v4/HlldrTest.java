@@ -62,7 +62,7 @@ public class HlldrTest {
 
     @Test
     public void testIsValidHllObject() throws Exception {
-        Hllhdr.Config config = Hllhdr.Config.builder().build();
+        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
 
         // invalid header
         ByteBuffer buffer = ByteBuffer.wrap(new byte[]{});
@@ -84,7 +84,7 @@ public class HlldrTest {
 
     @Test
     public void testDenseHllCount() throws Exception {
-        Hllhdr.Config config = Hllhdr.Config.builder().build();
+        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
         Hllhdr hllhdr = new Hllhdr(config, buffer);
@@ -93,5 +93,18 @@ public class HlldrTest {
 
         assertThat(result.isValid()).isTrue();
         assertThat(result.getCount()).isEqualTo(55527L);
+    }
+
+    @Test
+    public void testSparseHllCount() throws Exception {
+        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+
+        ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat"));
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
+
+        Hllhdr.HllCountResult result = hllhdr.hllCount();
+
+        assertThat(result.isValid()).isTrue();
+        assertThat(result.getCount()).isEqualTo(1002L);
     }
 }

@@ -4,7 +4,7 @@ import com.mayreh.pfutil.HllUtil;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class Dense {
+class Dense {
     private final Hllhdr.Config config;
     private final byte[] registers;
 

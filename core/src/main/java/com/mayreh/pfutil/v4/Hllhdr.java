@@ -25,6 +25,8 @@ public class Hllhdr {
     @Value
     @Builder
     public static class Config {
+        public static final Config DEFAULT = Config.builder().build();
+
         int hllSparseMaxBytes = 3000;
         int hllP = 14;
         int hllBits = 6;
@@ -50,7 +52,7 @@ public class Hllhdr {
 
     @Value
     public static class SumResult {
-        double ez;
+        int ez;
         double E;
     }
 
@@ -150,6 +152,16 @@ public class Hllhdr {
 
             Dense dense = new Dense(config, registers);
             sum = dense.denseSum();
+        } else if (this.header.encoding == Encoding.HLL_SPARSE) {
+            byte[] sparseBytes = new byte[this.buffer.remaining()];
+            this.buffer.get(sparseBytes);
+
+            Sparse sparse = new Sparse(config, sparseBytes);
+            Sparse.SparseSumResult result = sparse.sparseSum();
+            if (!result.isValid()) {
+                return new HllCountResult(false, 0);
+            }
+            sum = result.getSum();
         } else {
             throw new UnsupportedOperationException("to be implemented");
         }
@@ -168,14 +180,4 @@ public class Hllhdr {
         double result = Math.round(alpha * m * (m - ez) * (1 / (sum.E + beta)));
         return new HllCountResult(true, (long)result);
     }
-
-//    private double hllDenseSum() {
-//        byte[] registers = new byte[buffer.remaining()];
-//        buffer.get(registers);
-//
-//        Dense dense = new Dense(config, registers);
-//        Dense.SumResult sum = dense.denseSum();
-//
-//
-//    }
 }

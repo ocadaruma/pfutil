@@ -12,9 +12,8 @@ import java.nio.ByteBuffer;
 public class HllV4 implements Hll {
     private Hllhdr hllhdr;
 
-    public HllV4(byte[] hdrBytes) {
+    public HllV4(Hllhdr.Config config, byte[] hdrBytes) {
         ByteBuffer hdrBuffer = ByteBuffer.wrap(hdrBytes);
-        Hllhdr.Config config = Hllhdr.Config.builder().build();
         hllhdr = new Hllhdr(config, hdrBuffer);
 
         if (hllhdr.isValidHllObject()) {
