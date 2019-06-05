@@ -117,6 +117,11 @@ public class HlldrTest {
 
         assertThat(hllhdr.getHeader()).isNotNull();
         assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_SPARSE);
+
+        Hllhdr.HllCountResult result = hllhdr.hllCount();
+
+        assertThat(result.isValid()).isTrue();
+        assertThat(result.getCount()).isEqualTo(0L);
     }
 
     @Test
@@ -144,8 +149,8 @@ public class HlldrTest {
         byte[] newRepr = hllhdr.dump();
         byte[] reprFromRedis = TestUtil.getResourceAsBytes("v4/dense_nocache_55531.dat");
 
-        // header cache will reprFromRedis by outer layer
-        // so skip header section here
+        // header cache will be invalidated in outer layer
+        // so skip equality check of header section here
         for (int i = 16; i < newRepr.length; i++) {
             assertThat(newRepr[i]).isEqualTo(reprFromRedis[i]);
         }

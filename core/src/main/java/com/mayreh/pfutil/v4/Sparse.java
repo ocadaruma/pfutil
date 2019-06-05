@@ -1,17 +1,21 @@
 package com.mayreh.pfutil.v4;
 
 import com.mayreh.pfutil.HllUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
 
-@RequiredArgsConstructor
 class Sparse {
     private final Hllhdr.Config config;
-    private final ByteBuffer buffer;
+    private ByteBuffer buffer;
+
+    public Sparse(Hllhdr.Config config, ByteBuffer buffer) {
+        this.config = config;
+        this.buffer = buffer;
+    }
 
     private static final int HLL_SPARSE_XZERO_BIT = 0x40;
+    private static final int HLL_SPARSE_VAL_BIT = 0x80;
 
     @Value
     public static class SparseSumResult {
@@ -27,12 +31,16 @@ class Sparse {
         return (((int)b & 0xff) & 0xc0) == HLL_SPARSE_XZERO_BIT;
     }
 
+    private static boolean sparseIsVal(byte b) {
+        return (((int)b & 0xff) & HLL_SPARSE_VAL_BIT) > 0;
+    }
+
     private static int sparseZeroLen(byte b) {
         return (((int)b & 0xff) & 0x3f) + 1;
     }
 
     private static int sparseXZeroLen(byte b, byte nextB) {
-        return ((((int)b & 0xff) & 0x3f) << 8) | ((int)nextB & 0xff) + 1;
+        return (((((int)b & 0xff) & 0x3f) << 8) | ((int)nextB & 0xff)) + 1;
     }
 
     private static int sparseValValue(byte b) {
@@ -84,7 +92,42 @@ class Sparse {
     }
 
     public int sparseAdd(byte[] element) {
-        throw new UnsupportedOperationException("to be implemented");
+        Hllhdr.PatLenResult result = Hllhdr.hllPatLen(config, element);
+
+        return sparseSet(result.getReg(), result.getLen());
+    }
+
+    public int sparseSet(int index, int count) {
+        if (count > config.getHllSparseValMaxValue()) {
+            return promote();
+        }
+
+        ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() + 3);
+        newBuffer.put(buffer.array());
+        buffer = newBuffer;
+
+        buffer.position(Hllhdr.HEADER_BYTES_LEN);
+
+        while (buffer.hasRemaining()) {
+            byte b = buffer.get();
+
+            int oplen = 1;
+            int span;
+            if (sparseIsZero(b)) {
+                span = sparseZeroLen(b);
+            } else if (sparseIsVal(b)) {
+                span = sparseValLen(b);
+            } {
+                span = sparseXZeroLen(b, buffer.get());
+                oplen = 2;
+            }
+//            if (index <= )
+        }
+        throw new UnsupportedOperationException("");
+    }
+
+    private int promote() {
+        throw new UnsupportedOperationException("");
     }
 
     /**
