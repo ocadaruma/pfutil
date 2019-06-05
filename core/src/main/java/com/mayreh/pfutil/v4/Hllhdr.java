@@ -194,24 +194,15 @@ public class Hllhdr {
     }
 
     public HllCountResult hllCount() {
-        // seek to start of data
-        this.buffer.position(HEADER_BYTES_LEN);
-
         double m = config.hllRegisters();
         double alpha = 0.7213 / (1 + 1.079 / m);
         SumResult sum;
 
         if (this.header.encoding == Encoding.HLL_DENSE) {
-            byte[] registers = new byte[this.buffer.remaining()];
-            this.buffer.get(registers);
-
             Dense dense = new Dense(config, buffer);
             sum = dense.denseSum();
         } else if (this.header.encoding == Encoding.HLL_SPARSE) {
-            byte[] sparseBytes = new byte[this.buffer.remaining()];
-            this.buffer.get(sparseBytes);
-
-            Sparse sparse = new Sparse(config, sparseBytes);
+            Sparse sparse = new Sparse(config, this.buffer);
             Sparse.SparseSumResult result = sparse.sparseSum();
             if (!result.isValid()) {
                 return new HllCountResult(false, 0);

@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 @RequiredArgsConstructor
 class Sparse {
     private final Hllhdr.Config config;
-    private final byte[] sparseBytes;
+    private final ByteBuffer buffer;
 
     private static final int HLL_SPARSE_XZERO_BIT = 0x40;
 
@@ -51,30 +51,28 @@ class Sparse {
     }
 
     public SparseSumResult sparseSum() {
+        buffer.position(Hllhdr.HEADER_BYTES_LEN);
+
         double E = 0.0;
         int ez = 0;
         int idx = 0;
 
-        int p = 0;
-        while (p < sparseBytes.length) {
-            byte b = sparseBytes[p];
+        while (buffer.hasRemaining()) {
+            byte b = buffer.get();
 
             if (sparseIsZero(b)) {
                 int runlen = sparseZeroLen(b);
                 idx += runlen;
                 ez += runlen;
-                p++;
             } else if (sparseIsXZero(b)) {
-                int runlen = sparseXZeroLen(b, sparseBytes[p + 1]);
+                int runlen = sparseXZeroLen(b, buffer.get());
                 idx += runlen;
                 ez += runlen;
-                p += 2;
             } else {
                 int runlen = sparseValLen(b);
                 int regVal = sparseValValue(b);
                 idx += runlen;
                 E += HllUtil.pow2(-regVal) * runlen;
-                p++;
             }
         }
 

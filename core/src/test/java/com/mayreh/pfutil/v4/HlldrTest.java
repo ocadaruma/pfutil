@@ -130,7 +130,14 @@ public class HlldrTest {
                 "test", "test2", "test3", "test4", "test5", "test6", "test7"
         };
         for (String element : elements) {
-            hllhdr.hllAdd(element.getBytes(StandardCharsets.UTF_8));
+            int updated = hllhdr.hllAdd(element.getBytes(StandardCharsets.UTF_8));
+
+            // from observation using real Redis v4, HLL will not be updated until adding "test7"
+            if (element.equals("test7")) {
+                assertThat(updated).isEqualTo(1);
+            } else {
+                assertThat(updated).isEqualTo(0);
+            }
         }
 
         Hllhdr.HllCountResult countResult = hllhdr.hllCount();
