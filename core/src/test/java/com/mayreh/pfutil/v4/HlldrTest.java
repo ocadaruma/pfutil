@@ -157,4 +157,22 @@ public class HlldrTest {
         assertThat(countResult.isValid()).isTrue();
         assertThat(countResult.getCount()).isEqualTo(55531L);
     }
+
+    @Test
+    public void testHllSparseToDense() throws Exception {
+        Config config = Config.DEFAULT;
+
+        ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat"));
+        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+
+        assertThat(hllhdr.getHeader()).isNotNull();
+        assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_SPARSE);
+
+        hllhdr.hllSparseToDense();
+        assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_DENSE);
+
+        Hllhdr.HllCountResult countResult = hllhdr.hllCount();
+        assertThat(countResult.isValid()).isTrue();
+        assertThat(countResult.getCount()).isEqualTo(1002L);
+    }
 }

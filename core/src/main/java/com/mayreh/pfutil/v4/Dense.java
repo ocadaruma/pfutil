@@ -27,7 +27,7 @@ class Dense {
         return ((b0 >>> bitPosFromLSB) | (b1 << bitPosFromLSBInNextByte)) & config.hllRegisterMax();
     }
 
-    private static void setRegisterAt(
+    static void setRegisterAt(
             Config config,
             ByteBuffer buffer,
             int regnum,

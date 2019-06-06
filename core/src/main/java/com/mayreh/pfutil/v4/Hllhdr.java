@@ -11,11 +11,11 @@ import java.util.Arrays;
 /**
  * Java clone of https://github.com/antirez/redis/blob/4.0.10/src/hyperloglog.c
  */
-public class Hllhdr {
+class Hllhdr {
     private final Config config;
-    private final ByteBuffer buffer;
+    private ByteBuffer buffer;
     @Getter
-    private final Header header;
+    private Header header;
 
     public static final int HEADER_BYTES_LEN = 16;
 
@@ -115,6 +115,7 @@ public class Hllhdr {
          * Returns header if succeeded otherwise null
          */
         public static Header scan(ByteBuffer buffer) {
+            buffer.rewind();
             if (buffer.capacity() < HEADER_BYTES_LEN) {
                 return null;
             }
@@ -230,5 +231,55 @@ public class Hllhdr {
         buffer.rewind();
         byte[] src = buffer.array();
         return Arrays.copyOf(src, src.length);
+    }
+
+    /**
+     * Promote sparse representation to dense one
+     * Replace buffer field to newly allocated dense buffer
+     */
+    void hllSparseToDense() {
+        // nothing to do
+        if (header.encoding == Encoding.HLL_DENSE) {
+            return;
+        }
+
+        ByteBuffer denseBuffer = ByteBuffer.allocate(config.hllDenseSize());
+
+        // copy header
+        byte[] headerSection = new byte[HEADER_BYTES_LEN];
+        buffer.rewind();
+        buffer.get(headerSection);
+        denseBuffer.put(headerSection);
+
+        // skip magic and put encoding
+        denseBuffer.position(4);
+        denseBuffer.put(Encoding.HLL_DENSE.value);
+
+        int idx = 0;
+        while (buffer.hasRemaining()) {
+            byte b = buffer.get();
+            if (Sparse.sparseIsZero(b)) {
+                int runlen = Sparse.sparseZeroLen(b);
+                idx += runlen;
+            } else if (Sparse.sparseIsXZero(b)) {
+                int runlen = Sparse.sparseXZeroLen(b, buffer.get());
+                idx += runlen;
+            } else {
+                int runlen = Sparse.sparseValLen(b);
+                int regval = Sparse.sparseValValue(b);
+
+                while(runlen-- > 0) {
+                    Dense.setRegisterAt(config, denseBuffer, idx, regval);
+                    idx++;
+                }
+            }
+        }
+
+        if (idx != config.hllRegisters()) {
+            throw new RuntimeException("failed to promote to dense");
+        }
+
+        this.buffer = denseBuffer;
+        this.header = Header.scan(denseBuffer);
     }
 }
