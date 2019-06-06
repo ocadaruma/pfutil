@@ -17,7 +17,7 @@ script:
 
 before_install:
   - docker pull redis:4.0.14
-  - docker run --name redis4 -d redis:4.0.14 -p 6379:6379
+  - docker run --name redis4 -d -p 6379:6379 redis:4.0.14
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
