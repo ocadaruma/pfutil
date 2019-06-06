@@ -10,12 +10,15 @@ import java.util.function.Consumer;
 public class RedisUtil {
 
     public static void withRedis(Consumer<RedisCommands<byte[], byte[]>> f) {
+        String host = System.getenv().getOrDefault("REDIS_HOST", "127.0.0.1");
+        int port = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));
+
         RedisClient client = null;
         try {
             client = RedisClient
                     .create(RedisURI.builder()
-                            .withHost("127.0.0.1")
-                            .withPort(6379)
+                            .withHost(host)
+                            .withPort(port)
                             .build());
             f.accept(client.connect(ByteArrayCodec.INSTANCE).sync());
         } finally {

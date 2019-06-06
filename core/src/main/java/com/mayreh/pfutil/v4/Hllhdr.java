@@ -123,7 +123,8 @@ class Hllhdr {
 
         /**
          * Attempt to scan header and increment buffer position
-         * Returns header if succeeded otherwise null
+         *
+         * @return  header if succeeded otherwise null
          */
         public static Header scan(ByteBuffer buffer) {
             buffer.rewind();
@@ -226,9 +227,10 @@ class Hllhdr {
 
     /**
      * Add element to HLL.
-     *
-     * NOTE: Unlike original Redis implementation, always promote to
-     * dense representation regardless of the sparse bytes for simplification.
+     * <p>
+     * NOTE: Unlike original Redis implementation, the representation always be promoted to
+     * dense representation regardless of sparseness for simplification.
+     * </p>
      */
     public int hllAdd(byte[] element) {
         switch (this.header.encoding) {
@@ -243,7 +245,7 @@ class Hllhdr {
     }
 
     /**
-     * Returns copy of current HLL representation
+     * @return snapshot of current HLL representation
      */
     public byte[] dump() {
         buffer.rewind();
@@ -252,8 +254,10 @@ class Hllhdr {
     }
 
     /**
-     * Promote sparse representation to dense one
-     * Replace underlying buffer to newly allocated dense buffer
+     * Promote sparse representation to dense one.
+     * <p>
+     * Underlying buffer will be replaced to newly allocated dense buffer.
+     * </p>
      */
     void hllSparseToDense() {
         // nothing to do
@@ -303,6 +307,10 @@ class Hllhdr {
 
     /**
      * Merge given HLLs into this HLL
+     * <p>
+     * NOTE: Unlike original Redis implementation, the representation always be promoted to
+     * dense representation regardless of current encoding for simplification.
+     * </p>
      */
     void hllMerge(Hllhdr... others) {
         byte[] max = new byte[config.hllRegisters()];

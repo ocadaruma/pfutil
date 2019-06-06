@@ -4,8 +4,9 @@ import java.nio.ByteBuffer;
 
 /**
  * Provides Redis v4 compatible HLL features.
- *
+ * <p>
  * NOTE: This class is NOT thread-safe since every operation possibly mutates underlying byte array as in original C-implementation.
+ * </p>
  */
 public class HllV4 {
     private final Hllhdr hllhdr;
@@ -44,7 +45,9 @@ public class HllV4 {
 
     /**
      * Do PFADD using mostly same algorithm as of Redis v4.
-     * @see Hllhdr#hllAdd(byte[]) for the diferrences.
+     * <p>
+     * See {@link Hllhdr#hllAdd(byte[])} for the differences.
+     * </p>
      *
      * @param element the element to be added to HLL
      * @return whether HLL internal register was updated or not
@@ -60,8 +63,10 @@ public class HllV4 {
     }
 
     /**
-     * Do PFMERGE using mostly same algorithm as of Redis v4
-     * @see Hllhdr#hllMerge(Hllhdr...) for the diferrences
+     * Do PFMERGE using mostly same algorithm as of Redis v4.
+     * <p>
+     * See {@link Hllhdr#hllMerge(Hllhdr...)} for the differences.
+     * </p>
      *
      * @param others HLLs to be merged
      * @return this HLL
@@ -83,7 +88,9 @@ public class HllV4 {
 
     /**
      * Dump HLL representation as byte array.
+     * <p>
      * The byte array will be same as one that can be retrieved as follows:
+     * </p>
      * <pre>
      * {@code
      * redis-cli> PFADD key elem1, elem2, ....

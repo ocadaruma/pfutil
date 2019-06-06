@@ -7,8 +7,10 @@ import lombok.experimental.Accessors;
 import static com.mayreh.pfutil.v4.Hllhdr.HEADER_BYTES_LEN;
 
 /**
- * HLL Configurations
+ * HLL Configurations.
+ * <p>
  * These configurations are originally defined as #define macros in hyperloglog.c
+ * </p>
  */
 @Value
 @Builder

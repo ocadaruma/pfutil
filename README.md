@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ocadaruma/pfutil.svg?branch=master)](https://travis-ci.org/ocadaruma/pfutil)
 [![Javadocs](https://www.javadoc.io/badge/com.mayreh/pfutil.svg)](https://www.javadoc.io/doc/com.mayreh/pfutil)
 
-A Java HyperLogLog implementation which is compatible with Redis
+A Redis compatible HyperLogLog implementation written in Java
 
 ## Installation
 
@@ -52,4 +52,4 @@ $ redis-cli PFCOUNT foo
 (integer) 3
 ```
 
-See [example project](https://github.com/ocadaruma/pfutil/tree/master/example) for more usage.
+See also [example project](https://github.com/ocadaruma/pfutil/tree/master/example).
