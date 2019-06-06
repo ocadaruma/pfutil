@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class HlldrTest {
+public class HllhdrTest {
     @Test
     public void testScanHeader() {
         // invalid data
