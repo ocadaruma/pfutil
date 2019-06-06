@@ -3,12 +3,19 @@ buildscript {
         repos = {
             mavenCentral()
             jcenter()
+            maven {
+                url 'https://plugins.gradle.org/m2/'
+            }
         }
 
         lombokVersion = '1.18.8'
     }
 
     repositories repos
+
+    dependencies {
+        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.4.8'
+    }
 }
 
 allprojects {
