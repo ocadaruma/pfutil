@@ -97,7 +97,7 @@ public class HllV4 {
         return hllhdr.dump();
     }
 
-    static class HllV4Builder {
+    public static class HllV4Builder {
         private Config config = null;
         private byte[] representation = null;
 

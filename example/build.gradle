@@ -1,0 +1,8 @@
+apply plugin: 'application'
+
+mainClassName = 'com.example.Main'
+
+dependencies {
+    implementation project(':core')
+    implementation 'io.lettuce:lettuce-core:5.1.6.RELEASE'
+}
