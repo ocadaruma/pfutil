@@ -1,7 +1,6 @@
 package com.mayreh.pfutil.v4;
 
 import com.mayreh.pfutil.HllUtil;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -26,35 +25,6 @@ public class Hllhdr {
         HLL_SPARSE((byte)1);
 
         public final byte value;
-    }
-
-    @Value
-    @Builder
-    public static class Config {
-        public static final Config DEFAULT = Config.builder().build();
-
-        int hllSparseMaxBytes = 3000;
-        int hllP = 14;
-        int hllBits = 6;
-        int hllSparseZeroMaxLen = 64;
-        int hllSparseXZeroMaxLen = 16384;
-        int hllSparseValMaxValue = 32;
-
-        public int hllRegisters() {
-            return 1 << hllP;
-        }
-
-        public int hllDenseSize() {
-            return HEADER_BYTES_LEN + ((hllRegisters() * hllBits + 7) / 8);
-        }
-
-        public int hllRegisterMax() {
-            return (1 << hllBits) - 1;
-        }
-
-        public int hllPMask() {
-            return hllRegisters() - 1;
-        }
     }
 
     @Value
@@ -93,7 +63,7 @@ public class Hllhdr {
      */
     public static Hllhdr create(Config config) {
         int sparseLen = HEADER_BYTES_LEN + (
-                ((config.hllRegisters() + (config.hllSparseXZeroMaxLen - 1)) / config.hllSparseXZeroMaxLen) * 2
+                ((config.hllRegisters() + (config.hllSparseXZeroMaxLen() - 1)) / config.hllSparseXZeroMaxLen()) * 2
         );
 
         ByteBuffer buffer = ByteBuffer.allocate(sparseLen);

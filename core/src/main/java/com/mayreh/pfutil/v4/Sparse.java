@@ -6,10 +6,10 @@ import lombok.Value;
 import java.nio.ByteBuffer;
 
 class Sparse {
-    private final Hllhdr.Config config;
+    private final Config config;
     private ByteBuffer buffer;
 
-    public Sparse(Hllhdr.Config config, ByteBuffer buffer) {
+    public Sparse(Config config, ByteBuffer buffer) {
         this.config = config;
         this.buffer = buffer;
     }
@@ -106,7 +106,7 @@ class Sparse {
     }
 
     public int sparseSet(int index, int count) {
-        if (count > config.getHllSparseValMaxValue()) {
+        if (count > config.hllSparseValMaxValue()) {
             return promote();
         }
 
@@ -229,12 +229,12 @@ class Sparse {
     /**
      * Initialize given buffer as sparse representation
      */
-    static void initialize(Hllhdr.Config config, ByteBuffer buffer) {
+    static void initialize(Config config, ByteBuffer buffer) {
         buffer.position(Hllhdr.HEADER_BYTES_LEN);
 
         int aux = config.hllRegisters();
         while (aux > 0) {
-            int xzero = config.getHllSparseXZeroMaxLen();
+            int xzero = config.hllSparseXZeroMaxLen();
             if (xzero > aux) {
                 xzero = aux;
             }

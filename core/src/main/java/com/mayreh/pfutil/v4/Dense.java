@@ -7,14 +7,14 @@ import java.nio.ByteBuffer;
 
 @RequiredArgsConstructor
 class Dense {
-    private final Hllhdr.Config config;
+    private final Config config;
     private final ByteBuffer buffer;
 
     private static long getRegisterAt(
-            Hllhdr.Config config,
+            Config config,
             ByteBuffer buffer,
             int regnum) {
-        int hllBits = config.getHllBits();
+        int hllBits = config.hllBits();
 
         int byteOffset = Hllhdr.HEADER_BYTES_LEN + (regnum * hllBits / 8);
         long bitPosFromLSB = regnum * hllBits & 7;
@@ -28,11 +28,11 @@ class Dense {
     }
 
     private static void setRegisterAt(
-            Hllhdr.Config config,
+            Config config,
             ByteBuffer buffer,
             int regnum,
             int count) {
-        int hllBits = config.getHllBits();
+        int hllBits = config.hllBits();
 
         int byteOffset = Hllhdr.HEADER_BYTES_LEN + (regnum * hllBits / 8);
         long bitPosFromLSB = regnum * hllBits & 7;

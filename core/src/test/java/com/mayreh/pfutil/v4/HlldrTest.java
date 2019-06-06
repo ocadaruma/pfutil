@@ -63,7 +63,7 @@ public class HlldrTest {
 
     @Test
     public void testIsValidHllObject() throws Exception {
-        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+        Config config = Config.DEFAULT;
 
         // invalid header
         ByteBuffer buffer = ByteBuffer.wrap(new byte[]{});
@@ -85,7 +85,7 @@ public class HlldrTest {
 
     @Test
     public void testDenseHllCount() throws Exception {
-        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+        Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
         Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
@@ -98,7 +98,7 @@ public class HlldrTest {
 
     @Test
     public void testSparseHllCount() throws Exception {
-        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+        Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat"));
         Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
@@ -111,7 +111,7 @@ public class HlldrTest {
 
     @Test
     public void testCreateEmptyHll() {
-        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+        Config config = Config.DEFAULT;
 
         Hllhdr hllhdr = Hllhdr.create(config);
 
@@ -126,7 +126,7 @@ public class HlldrTest {
 
     @Test
     public void testDenseHllAdd() throws Exception {
-        Hllhdr.Config config = Hllhdr.Config.DEFAULT;
+        Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
         Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
