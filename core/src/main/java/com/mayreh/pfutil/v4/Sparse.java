@@ -58,6 +58,14 @@ class Sparse {
         buffer.put((byte)(_l & 0xff));
     }
 
+    private static void sparseZeroSet(ByteBuffer buffer, int len) {
+        buffer.put((byte)(len - 1));
+    }
+
+    private static void sparseValSet(ByteBuffer buffer, int val, int len) {
+        buffer.put((byte)(((val - 1) << 2) | (len - 1) | HLL_SPARSE_VAL_BIT));
+    }
+
     public SparseSumResult sparseSum() {
         buffer.position(Hllhdr.HEADER_BYTES_LEN);
 
@@ -102,27 +110,83 @@ class Sparse {
             return promote();
         }
 
-        ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() + 3);
-        newBuffer.put(buffer.array());
-        buffer = newBuffer;
-
         buffer.position(Hllhdr.HEADER_BYTES_LEN);
 
+        int first = 0;
+        int prevPos = -1;
+        int nextPos = -1;
+        int span = 0;
         while (buffer.hasRemaining()) {
             byte b = buffer.get();
 
             int oplen = 1;
-            int span;
             if (sparseIsZero(b)) {
                 span = sparseZeroLen(b);
             } else if (sparseIsVal(b)) {
                 span = sparseValLen(b);
-            } {
+            } else {
                 span = sparseXZeroLen(b, buffer.get());
                 oplen = 2;
             }
-//            if (index <= )
+            if (index <= first + span - 1) {
+                break;
+            }
+            prevPos = buffer.position() - 1;
+            buffer.position(buffer.position() + oplen - 1);
+            first += span;
         }
+
+        if (span == 0) {
+            return -1;
+        }
+
+        if (buffer.position() < buffer.capacity() - 2) {
+            buffer.mark();
+            if (sparseIsXZero(buffer.get())) {
+                nextPos = buffer.position() + 1;
+            }
+            buffer.reset();
+        } else if (buffer.position() < buffer.capacity() - 1) {
+            nextPos = buffer.position() + 1;
+        }
+
+        buffer.mark();
+        byte b = buffer.get();
+        boolean isZero = false, isXZero = false, isVal = false;
+        int runlen;
+        if (sparseIsZero(b)) {
+            isZero = true;
+            runlen = sparseZeroLen(b);
+        } else if (sparseIsXZero(b)) {
+            isXZero = true;
+            runlen = sparseXZeroLen(b, buffer.get());
+        } else {
+            isVal = true;
+            runlen = sparseValLen(b);
+        }
+
+        buffer.reset();
+        int oldCount;
+        if (isVal) {
+            oldCount = sparseValValue(b);
+            if (oldCount >= count) {
+                return 0;
+            }
+            if (runlen == 1) {
+                sparseValSet(buffer, count, 1);
+                return updated();
+            }
+        }
+
+        if (isZero && runlen == 1) {
+            sparseValSet(buffer, count, 1);
+            return updated();
+        }
+
+        throw new UnsupportedOperationException("");
+    }
+
+    private int updated() {
         throw new UnsupportedOperationException("");
     }
 
