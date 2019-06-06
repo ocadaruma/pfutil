@@ -14,9 +14,7 @@ public class Config {
 
     int hllP = 14;
     int hllBits = 6;
-    int hllSparseZeroMaxLen = 64;
     int hllSparseXZeroMaxLen = 16384;
-    int hllSparseValMaxValue = 32;
 
     public int hllRegisters() {
         return 1 << hllP;
