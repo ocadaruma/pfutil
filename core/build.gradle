@@ -1,3 +1,5 @@
+archivesBaseName = 'pfutil'
+
 dependencies {
     testImplementation 'io.lettuce:lettuce-core:5.1.6.RELEASE'
 }

@@ -38,3 +38,82 @@ subprojects {
         }
     }
 }
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.allTasks.any { it instanceof Sign }) {
+        def password = System.console().readPassword("PGP Private Key Password: ")
+        project(':core') { ext."signing.password" = new String(password) }
+    }
+}
+
+project(':core') {
+    apply plugin: 'maven'
+    apply plygin: 'signing'
+
+    if (!project.hasProperty('sonatypeUsername')) {
+        ext.sonatypeUsername = ''
+    }
+    if (!project.hasProperty('sonatypePassword')) {
+        ext.sonatypePassword = ''
+    }
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar
+    }
+
+    signing {
+        sign configurations.archives
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+
+                pom.project {
+                    name 'pfutil'
+                    packaging 'jar'
+                    description 'A Java HyperLogLog implementation which is compatible with Redis'
+                    url 'https://github.com/ocadaruma/pfutil'
+
+                    scm {
+                        connection 'scm:git:git@github.com:ocadaruma/pfutil.git'
+                        url 'git@github.com:ocadaruma/pfutil.git'
+                    }
+
+                    licenses {
+                        license {
+                            name 'BSD 3-Clause License'
+                            url 'https://raw.githubusercontent.com/ocadaruma/pfutil/master/LICENSE'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'ocadaruma'
+                            name 'Haruki Okada'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
