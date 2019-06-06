@@ -6,14 +6,23 @@ import lombok.experimental.Accessors;
 
 import static com.mayreh.pfutil.v4.Hllhdr.HEADER_BYTES_LEN;
 
+/**
+ * HLL Configurations
+ * These configurations are originally defined as #define macros in hyperloglog.c
+ */
 @Value
 @Builder
 @Accessors(fluent = true)
 public class Config {
     public static final Config DEFAULT = Config.builder().build();
 
+    @Builder.Default
     int hllP = 14;
+
+    @Builder.Default
     int hllBits = 6;
+
+    @Builder.Default
     int hllSparseXZeroMaxLen = 16384;
 
     public int hllRegisters() {

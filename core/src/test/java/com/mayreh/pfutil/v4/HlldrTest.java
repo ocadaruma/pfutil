@@ -67,19 +67,19 @@ public class HlldrTest {
 
         // invalid header
         ByteBuffer buffer = ByteBuffer.wrap(new byte[]{});
-        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isFalse();
 
         // invalid dense size
         buffer = ByteBuffer.wrap(new byte[]{
                 'H','Y','L','L',0x0,0x0,0x0,0x0,(byte)0xe7,(byte)0xd8,0x0,0x0,0x0,0x0,0x0,0x0
         });
-        hllhdr = Hllhdr.fromRepr(config, buffer);
+        hllhdr = new Hllhdr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isFalse();
 
         // valid dense size
         buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
-        hllhdr = Hllhdr.fromRepr(config, buffer);
+        hllhdr = new Hllhdr(config, buffer);
         assertThat(hllhdr.isValidHllObject()).isTrue();
     }
 
@@ -88,7 +88,7 @@ public class HlldrTest {
         Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
-        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
 
         Hllhdr.HllCountResult result = hllhdr.hllCount();
 
@@ -101,7 +101,7 @@ public class HlldrTest {
         Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat"));
-        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
 
         Hllhdr.HllCountResult result = hllhdr.hllCount();
 
@@ -113,7 +113,7 @@ public class HlldrTest {
     public void testCreateEmptyHll() {
         Config config = Config.DEFAULT;
 
-        Hllhdr hllhdr = Hllhdr.create(config);
+        Hllhdr hllhdr = new Hllhdr(config);
 
         assertThat(hllhdr.getHeader()).isNotNull();
         assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_SPARSE);
@@ -129,7 +129,7 @@ public class HlldrTest {
         Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/dense_cached_55527.dat"));
-        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
 
         String[] elements = new String[]{
                 "test", "test2", "test3", "test4", "test5", "test6", "test7"
@@ -163,7 +163,7 @@ public class HlldrTest {
         Config config = Config.DEFAULT;
 
         ByteBuffer buffer = ByteBuffer.wrap(TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat"));
-        Hllhdr hllhdr = Hllhdr.fromRepr(config, buffer);
+        Hllhdr hllhdr = new Hllhdr(config, buffer);
 
         assertThat(hllhdr.getHeader()).isNotNull();
         assertThat(hllhdr.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_SPARSE);
@@ -181,8 +181,8 @@ public class HlldrTest {
         Config config = Config.DEFAULT;
 
         byte[] otherBytes = TestUtil.getResourceAsBytes("v4/dense_cached_55531.dat");
-        Hllhdr otherHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(otherBytes));
-        Hllhdr thisHll = Hllhdr.create(config);
+        Hllhdr otherHll = new Hllhdr(config, ByteBuffer.wrap(otherBytes));
+        Hllhdr thisHll = new Hllhdr(config);
 
         assertThat(thisHll.hllCount().getCount()).isEqualTo(0L);
 
@@ -206,8 +206,8 @@ public class HlldrTest {
         Config config = Config.DEFAULT;
 
         byte[] otherBytes = TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat");
-        Hllhdr otherHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(otherBytes));
-        Hllhdr thisHll = Hllhdr.create(config);
+        Hllhdr otherHll = new Hllhdr(config, ByteBuffer.wrap(otherBytes));
+        Hllhdr thisHll = new Hllhdr(config);
 
         assertThat(thisHll.hllCount().getCount()).isEqualTo(0L);
 
@@ -226,9 +226,9 @@ public class HlldrTest {
         byte[] sparseBytes = TestUtil.getResourceAsBytes("v4/sparse_cached_AtoZ.dat");
         byte[] mergedBytesFromRedis = TestUtil.getResourceAsBytes("v4/dense_cached_55531+AtoZ_55581.dat");
 
-        Hllhdr denseHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(denseBytes));
-        Hllhdr sparseHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(sparseBytes));
-        Hllhdr thisHll = Hllhdr.create(config);
+        Hllhdr denseHll = new Hllhdr(config, ByteBuffer.wrap(denseBytes));
+        Hllhdr sparseHll = new Hllhdr(config, ByteBuffer.wrap(sparseBytes));
+        Hllhdr thisHll = new Hllhdr(config);
 
         assertThat(thisHll.hllCount().getCount()).isEqualTo(0L);
 

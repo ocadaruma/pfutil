@@ -1,9 +1,7 @@
 package com.mayreh.pfutil.v4;
 
 import com.mayreh.pfutil.HllUtil;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
+import lombok.*;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -45,23 +43,13 @@ class Hllhdr {
         int reg; // the register index the element hashes to
     }
 
-    private Hllhdr(Config config, ByteBuffer buffer) {
+    public Hllhdr(Config config, ByteBuffer buffer) {
         this.config = config;
         this.buffer = buffer;
         this.header = Header.scan(buffer);
     }
 
-    /**
-     * Instantiate Hllhdr from existing Redis v4 representation binary
-     */
-    public static Hllhdr fromRepr(Config config, ByteBuffer buffer) {
-        return new Hllhdr(config, buffer);
-    }
-
-    /**
-     * Instantiate empty Hllhdr
-     */
-    public static Hllhdr create(Config config) {
+    public Hllhdr(Config config) {
         int sparseLen = HEADER_BYTES_LEN + (
                 ((config.hllRegisters() + (config.hllSparseXZeroMaxLen() - 1)) / config.hllSparseXZeroMaxLen()) * 2
         );
@@ -70,7 +58,10 @@ class Hllhdr {
         Sparse.initialize(config, buffer);
 
         buffer.rewind();
-        return new Hllhdr(config, buffer);
+
+        this.config = config;
+        this.buffer = buffer;
+        this.header = Header.scan(buffer);
     }
 
     static PatLenResult hllPatLen(Config config, byte[] element) {
@@ -88,26 +79,45 @@ class Hllhdr {
         return new PatLenResult(count, (int)index);
     }
 
-    static void invalidateCache(ByteBuffer buffer) {
-        // set position to beginning of Cardin.
-        buffer.position(8);
-
-        byte[] card = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            card[i] = buffer.get();
-        }
-
+    void invalidateCache() {
         // set position to cache flag
-        buffer.position(15);
-        buffer.put((byte)(card[7] | (1 << 7)));
+        buffer.position(15).mark();
+        byte b = buffer.get();
+
+        buffer.reset();
+        buffer.put((byte)(b | (1 << 7)));
+
+        header.setValidCache(false);
     }
 
-    @Value
+    void setCache(long count) {
+        // set position to the beginning of Cardin.
+        buffer.position(8).mark();
+
+        buffer.put((byte)(count & 0xff));
+        buffer.put((byte)((count >>> 8) & 0xff));
+        buffer.put((byte)((count >>> 16) & 0xff));
+        buffer.put((byte)((count >>> 24) & 0xff));
+        buffer.put((byte)((count >>> 32) & 0xff));
+        buffer.put((byte)((count >>> 40) & 0xff));
+        buffer.put((byte)((count >>> 48) & 0xff));
+        buffer.put((byte)((count >>> 56) & 0xff));
+
+        header.setValidCache(true);
+    }
+
+    @Data
+    @AllArgsConstructor
     public static class Header {
         private static final byte[] magic = new byte[]{'H', 'Y', 'L', 'L'};
 
+        @Setter(AccessLevel.PRIVATE)
         Encoding encoding;
+
+        @Setter(AccessLevel.PRIVATE)
         boolean validCache;
+
+        @Setter(AccessLevel.PRIVATE)
         long cardinality;
 
         /**
@@ -305,9 +315,6 @@ class Hllhdr {
         for (int i = 0; i < max.length; i++) {
             Dense.setRegisterAt(config, buffer, i, max[i]);
         }
-
-        invalidateCache(buffer);
-        this.header = Header.scan(buffer);
     }
 
     /**
