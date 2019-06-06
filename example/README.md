@@ -1,0 +1,3 @@
+```bash
+$ ./gradlew :example:run
+```
