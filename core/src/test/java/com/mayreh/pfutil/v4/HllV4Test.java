@@ -53,4 +53,16 @@ public class HllV4Test {
 
         assertThat(Arrays.equals(hll.dumpRepr(), otherBytes)).isTrue();
     }
+
+    @Test
+    public void testCountFromCardinCache() {
+        HllV4 hll = HllV4.newBuilder().build();
+        hll.pfAdd("a".getBytes());
+        hll.pfAdd("b".getBytes());
+        hll.pfAdd("c".getBytes());
+        hll.pfAdd("d".getBytes());
+
+        assertThat(hll.pfCount()).isEqualTo(4L);
+        assertThat(hll.pfCount()).isEqualTo(4L);
+    }
 }

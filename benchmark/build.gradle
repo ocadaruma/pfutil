@@ -1,0 +1,9 @@
+apply plugin: 'me.champeau.gradle.jmh'
+
+dependencies {
+    implementation project(':core')
+}
+
+//jmh {
+//    profilers = ['perf']
+//}
