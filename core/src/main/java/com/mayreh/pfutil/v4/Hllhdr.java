@@ -118,6 +118,20 @@ public class Hllhdr {
         return new PatLenResult(count, (int)index);
     }
 
+    static void invalidateCache(ByteBuffer buffer) {
+        // set position to beginning of Cardin.
+        buffer.position(8);
+
+        byte[] card = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            card[i] = buffer.get();
+        }
+
+        // set position to cache flag
+        buffer.position(15);
+        buffer.put((byte)(card[7] | (1 << 7)));
+    }
+
     @Value
     public static class Header {
         private static final byte[] magic = new byte[]{'H', 'Y', 'L', 'L'};

@@ -140,14 +140,17 @@ class Sparse {
             return -1;
         }
 
+        buffer.mark();
         if (buffer.position() < buffer.capacity() - 2) {
-            buffer.mark();
             if (sparseIsXZero(buffer.get())) {
                 nextPos = buffer.position() + 1;
             }
             buffer.reset();
-        } else if (buffer.position() < buffer.capacity() - 1) {
-            nextPos = buffer.position() + 1;
+        } else {
+            buffer.reset();
+            if (buffer.position() < buffer.capacity() - 1) {
+                nextPos = buffer.position() + 1;
+            }
         }
 
         buffer.mark();
@@ -174,20 +177,49 @@ class Sparse {
             }
             if (runlen == 1) {
                 sparseValSet(buffer, count, 1);
-                return updated();
+                return updated(prevPos);
             }
         }
 
         if (isZero && runlen == 1) {
             sparseValSet(buffer, count, 1);
-            return updated();
+            return updated(prevPos);
         }
 
         throw new UnsupportedOperationException("");
     }
 
-    private int updated() {
-        throw new UnsupportedOperationException("");
+    private int updated(int prevPos) {
+        int pos = prevPos > -1 ? prevPos : Hllhdr.HEADER_BYTES_LEN;
+
+        buffer.position(pos);
+        int scanlen = 5;
+        while (buffer.hasRemaining() && scanlen-- > 0) {
+            byte b = buffer.get();
+            if (sparseIsXZero(b)) {
+                // proceed
+                buffer.get();
+                continue;
+            } else if (sparseIsZero(b)) {
+                continue;
+            }
+
+            if (buffer.position() < buffer.capacity() - 1) {
+                buffer.mark();
+                byte b1 = buffer.get();
+                buffer.reset();
+
+                if (sparseIsVal(b1)) {
+                    int v0 = sparseValValue(b);
+                    int v1 = sparseValValue(b1);
+                    if (v0 == v1) {
+
+                    }
+                }
+            }
+        }
+        Hllhdr.invalidateCache(buffer);
+        return 1;
     }
 
     private int promote() {
