@@ -1,3 +1,11 @@
+dist: xenial
+
+services:
+  - docker
+
+env:
+  - TEST_IT=1
+
 language: java
 
 jdk:
@@ -6,6 +14,10 @@ jdk:
 
 script:
   - ./gradlew check
+
+before_install:
+  - docker pull redis:4.0.14
+  - docker run --name redis4 -d redis:4.0.14 -p 6379:6379
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
