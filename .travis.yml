@@ -13,7 +13,7 @@ jdk:
   - openjdk11
 
 script:
-  - ./gradlew check
+  - ./gradlew --no-daemon clean check
 
 before_install:
   - docker pull redis:4.0.14
