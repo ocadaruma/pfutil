@@ -13,7 +13,7 @@ buildscript {
 
 allprojects {
     group 'com.mayreh'
-    version '0.0.1-SNAPSHOT'
+    version '0.0.1'
 }
 
 subprojects {
