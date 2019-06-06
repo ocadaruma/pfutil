@@ -213,12 +213,19 @@ class Hllhdr {
         return new HllCountResult(true, (long)result);
     }
 
+    /**
+     * Add element to HLL.
+     *
+     * NOTE: Unlike original Redis implementation, always promote to
+     * dense representation regardless of the sparse bytes for simplification.
+     */
     public int hllAdd(byte[] element) {
         switch (this.header.encoding) {
             case HLL_DENSE:
                 return new Dense(config, buffer).denseAdd(element);
             case HLL_SPARSE:
-                throw new UnsupportedOperationException("to be implemented");
+                hllSparseToDense();
+                return new Dense(config, buffer).denseAdd(element);
             default:
                 return -1;
         }
