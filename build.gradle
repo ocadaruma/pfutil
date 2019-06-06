@@ -48,7 +48,7 @@ gradle.taskGraph.whenReady { taskGraph ->
 
 project(':core') {
     apply plugin: 'maven'
-    apply plygin: 'signing'
+    apply plugin: 'signing'
 
     if (!project.hasProperty('sonatypeUsername')) {
         ext.sonatypeUsername = ''
