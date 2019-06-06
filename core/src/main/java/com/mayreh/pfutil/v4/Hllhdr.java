@@ -104,6 +104,7 @@ class Hllhdr {
         buffer.put((byte)((count >>> 56) & 0xff));
 
         header.setValidCache(true);
+        header.setCardinality(count);
     }
 
     @Data
