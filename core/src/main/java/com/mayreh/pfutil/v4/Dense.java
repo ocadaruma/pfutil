@@ -10,7 +10,7 @@ class Dense {
     private final Config config;
     private final ByteBuffer buffer;
 
-    private static long getRegisterAt(
+    static long getRegisterAt(
             Config config,
             ByteBuffer buffer,
             int regnum) {

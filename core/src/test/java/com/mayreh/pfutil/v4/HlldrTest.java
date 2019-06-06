@@ -175,4 +175,75 @@ public class HlldrTest {
         assertThat(countResult.isValid()).isTrue();
         assertThat(countResult.getCount()).isEqualTo(1002L);
     }
+
+    @Test
+    public void testHllMergeDense() throws Exception {
+        Config config = Config.DEFAULT;
+
+        byte[] otherBytes = TestUtil.getResourceAsBytes("v4/dense_cached_55531.dat");
+        Hllhdr otherHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(otherBytes));
+        Hllhdr thisHll = Hllhdr.create(config);
+
+        assertThat(thisHll.hllCount().getCount()).isEqualTo(0L);
+
+        thisHll.hllMerge(otherHll);
+
+        assertThat(thisHll.getHeader()).isNotNull();
+        assertThat(thisHll.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_DENSE);
+        assertThat(thisHll.hllCount().getCount()).isEqualTo(55531L);
+
+        byte[] newRepr = thisHll.dump();
+
+        // header cache will be updated in outer layer
+        // so skip equality check of header section here
+        for (int i = 16; i < newRepr.length; i++) {
+            assertThat(newRepr[i]).isEqualTo(otherBytes[i]);
+        }
+    }
+
+    @Test
+    public void testHllMergeSparse() throws Exception {
+        Config config = Config.DEFAULT;
+
+        byte[] otherBytes = TestUtil.getResourceAsBytes("v4/sparse_cached_1002.dat");
+        Hllhdr otherHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(otherBytes));
+        Hllhdr thisHll = Hllhdr.create(config);
+
+        assertThat(thisHll.hllCount().getCount()).isEqualTo(0L);
+
+        thisHll.hllMerge(otherHll);
+
+        assertThat(thisHll.getHeader()).isNotNull();
+        assertThat(thisHll.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_DENSE);
+        assertThat(thisHll.hllCount().getCount()).isEqualTo(1002L);
+    }
+
+    @Test
+    public void testHllMergeMultiple() throws Exception {
+        Config config = Config.DEFAULT;
+
+        byte[] denseBytes = TestUtil.getResourceAsBytes("v4/dense_cached_55531.dat");
+        byte[] sparseBytes = TestUtil.getResourceAsBytes("v4/sparse_cached_AtoZ.dat");
+        byte[] mergedBytesFromRedis = TestUtil.getResourceAsBytes("v4/dense_cached_55531+AtoZ_55581.dat");
+
+        Hllhdr denseHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(denseBytes));
+        Hllhdr sparseHll = Hllhdr.fromRepr(config, ByteBuffer.wrap(sparseBytes));
+        Hllhdr thisHll = Hllhdr.create(config);
+
+        assertThat(thisHll.hllCount().getCount()).isEqualTo(0L);
+
+        thisHll.hllMerge(denseHll, sparseHll);
+
+        assertThat(thisHll.getHeader()).isNotNull();
+        assertThat(thisHll.getHeader().getEncoding()).isEqualTo(Hllhdr.Encoding.HLL_DENSE);
+        assertThat(thisHll.hllCount().getCount()).isEqualTo(55581L);
+
+        byte[] newRepr = thisHll.dump();
+
+        // header cache will be updated in outer layer
+        // so skip equality check of header section here
+        for (int i = 16; i < mergedBytesFromRedis.length; i++) {
+            assertThat(newRepr[i]).isEqualTo(mergedBytesFromRedis[i]);
+        }
+    }
 }

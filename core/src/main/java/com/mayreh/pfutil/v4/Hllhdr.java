@@ -41,7 +41,7 @@ class Hllhdr {
 
     @Value
     public static class PatLenResult {
-        int len; // the length of the pattern 000..1 of the element hash
+        int len; // the length of the pattern 000..1 in the element hash
         int reg; // the register index the element hashes to
     }
 
@@ -242,7 +242,7 @@ class Hllhdr {
 
     /**
      * Promote sparse representation to dense one
-     * Replace buffer field to newly allocated dense buffer
+     * Replace underlying buffer to newly allocated dense buffer
      */
     void hllSparseToDense() {
         // nothing to do
@@ -288,5 +288,69 @@ class Hllhdr {
 
         this.buffer = denseBuffer;
         this.header = Header.scan(denseBuffer);
+    }
+
+    /**
+     * Merge given HLLs into this HLL
+     */
+    void hllMerge(Hllhdr... others) {
+        byte[] max = new byte[config.hllRegisters()];
+        hllMergeRegisters(config, max, this);
+        hllMergeRegisters(config, max, others);
+
+        if (header.encoding == Encoding.HLL_SPARSE) {
+            hllSparseToDense();
+        }
+
+        for (int i = 0; i < max.length; i++) {
+            Dense.setRegisterAt(config, buffer, i, max[i]);
+        }
+
+        invalidateCache(buffer);
+        this.header = Header.scan(buffer);
+    }
+
+    /**
+     * Merge registers of given HLLs then write to target array
+     */
+    private static void hllMergeRegisters(Config config, byte[] max, Hllhdr... hlls) {
+        for (Hllhdr hll : hlls) {
+            boolean isDense = hll.header.encoding == Encoding.HLL_DENSE;
+            if (isDense) {
+                for (int i = 0; i < max.length; i++) {
+                    long val = Dense.getRegisterAt(config, hll.buffer, i);
+                    if (val > (max[i] & 0xffL)) {
+                        max[i] = (byte)val;
+                    }
+                }
+            } else {
+                hll.buffer.position(HEADER_BYTES_LEN);
+
+                int idx = 0;
+                while (hll.buffer.hasRemaining()) {
+                    byte b = hll.buffer.get();
+                    long runlen;
+                    if (Sparse.sparseIsZero(b)) {
+                        runlen = Sparse.sparseZeroLen(b);
+                        idx += runlen;
+                    } else if (Sparse.sparseIsXZero(b)) {
+                        runlen = Sparse.sparseXZeroLen(b, hll.buffer.get());
+                        idx += runlen;
+                    } else {
+                        runlen = Sparse.sparseValLen(b);
+                        int regval = Sparse.sparseValValue(b);
+                        while (runlen-- > 0) {
+                            if (regval > (max[idx] & 0xff)) {
+                                max[idx] = (byte)regval;
+                            }
+                            idx++;
+                        }
+                    }
+                }
+                if (idx != config.hllRegisters()) {
+                    throw new RuntimeException("failed to merge");
+                }
+            }
+        }
     }
 }
