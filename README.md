@@ -8,7 +8,7 @@ A Java HyperLogLog implementation which is compatible with Redis
 
 Maven:
 
-```
+```xml
 <dependency>
   <groupId>com.mayreh</groupId>
   <artifactId>pfutil</artifactId>
@@ -18,8 +18,10 @@ Maven:
 
 Gradle:
 
-```
-compile("com.mayreh:pfutil:0.0.1")
+```groovy
+dependencies {
+    compile 'com.mayreh:pfutil:0.0.1'
+}
 ```
 
 ## Usage
