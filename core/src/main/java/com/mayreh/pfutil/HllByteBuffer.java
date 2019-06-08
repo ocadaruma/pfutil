@@ -10,6 +10,7 @@ public abstract class HllByteBuffer {
 
     private static final int HLL_P = 14;
     private static final int HLL_REGISTERS = 1 << HLL_P;
+    private static final int HLL_P_MASK = HLL_REGISTERS - 1;
     private static final int HLL_BITS = 6;
     private static final int HLL_REGISTER_MAX = (1 << HLL_BITS) - 1;
 
@@ -61,6 +62,14 @@ public abstract class HllByteBuffer {
 
     protected static int headerLen() {
         return HEADER_LEN;
+    }
+
+    protected static int registerBits() {
+        return HLL_P;
+    }
+
+    protected static int registerBitsMask() {
+        return HLL_REGISTERS - 1;
     }
 
     protected static byte[] magic() {

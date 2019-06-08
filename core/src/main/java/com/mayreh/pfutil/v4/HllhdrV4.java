@@ -8,10 +8,6 @@ import com.mayreh.pfutil.HllUtil;
  * A HLL representation compatible with Redis V4 (LogLog-Beta)
  */
 class HllhdrV4 extends HllByteBuffer {
-    private static final int HLL_P_MASK;
-    static {
-        HLL_P_MASK = registerSize() - 1;
-    }
 
     HllhdrV4() {
         super();
@@ -55,7 +51,7 @@ class HllhdrV4 extends HllByteBuffer {
 
     private PatLenResult hllPatLen(byte[] element) {
         long hash = HllUtil.murmurHash64A(element, 0xadc83b19);
-        long index = hash & HLL_P_MASK;
+        long index = hash & registerBitsMask();
         hash |= (1L << 63);
 
         long bit = registerSize();

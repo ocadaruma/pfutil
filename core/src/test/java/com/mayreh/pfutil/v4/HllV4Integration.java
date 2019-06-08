@@ -5,6 +5,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -29,7 +30,7 @@ public class HllV4Integration {
             key = "pfutil:it100".getBytes();
             HllV4 hll100 = HllV4.newBuilder().build();
             commands.del(key);
-            elements = randomizedAdd(commands, key, hll100, 100);
+            elements = randomizedAdd(commands, key, hll100, 100, -1);
 
             assertThat(hll100.pfCount())
                     .as(elements.isEmpty() ? "check count" : "check count for elements: " + elements)
@@ -38,7 +39,7 @@ public class HllV4Integration {
             key = "pfutil:it1000".getBytes();
             HllV4 hll1000 = HllV4.newBuilder().build();
             commands.del(key);
-            elements = randomizedAdd(commands, key, hll1000, 1000);
+            elements = randomizedAdd(commands, key, hll1000, 1000, -1);
 
             assertThat(hll1000.pfCount())
                     .as(elements.isEmpty() ? "check count" : "check count for elements: " + elements)
@@ -47,7 +48,7 @@ public class HllV4Integration {
             key = "pfutil:it10000".getBytes();
             HllV4 hll10000 = HllV4.newBuilder().build();
             commands.del(key);
-            elements = randomizedAdd(commands, key, hll10000, 10000);
+            elements = randomizedAdd(commands, key, hll10000, 10000, -1);
 
             assertThat(hll10000.pfCount())
                     .as(elements.isEmpty() ? "check count" : "check count for elements: " + elements)
@@ -77,14 +78,14 @@ public class HllV4Integration {
             key = "pfutil:it100000".getBytes();
             HllV4 hll100000 = HllV4.newBuilder().build();
             commands.del(key);
-            randomizedAdd(commands, key, hll100000, 100000);
+            randomizedAdd(commands, key, hll100000, 100000, -1);
 
             assertThat(hll100000.pfCount()).isEqualTo(commands.pfcount(key).longValue());
 
             key = "pfutil:it1000000".getBytes();
             HllV4 hll1000000 = HllV4.newBuilder().build();
             commands.del(key);
-            randomizedAdd(commands, key, hll1000000, 1000000);
+            randomizedAdd(commands, key, hll1000000, 1000000, -1);
 
             assertThat(hll1000000.pfCount()).isEqualTo(commands.pfcount(key).longValue());
 
@@ -98,11 +99,36 @@ public class HllV4Integration {
         });
     }
 
+    @Test
+    public void testLargeElementsSmallCardinality() {
+        if (shouldSkip()) {
+            return;
+        }
+
+        System.out.println("start large elements small cardinality integration...");
+        RedisUtil.withRedis(commands -> {
+            byte[] key;
+
+            key = "pfutil:it1000000%100".getBytes();
+            HllV4 hll100 = HllV4.newBuilder().build();
+
+            hll100.pfAdd("dummy".getBytes());
+
+            // to force sparse representation, write dump to redis first.
+            commands.set(key, hll100.dumpRepr());
+            randomizedAdd(commands, key, hll100, 1000000, 100);
+
+            assertThat(hll100.pfCount()).isEqualTo(commands.pfcount(key).longValue());
+            assertThat(Arrays.equals(hll100.dumpRepr(), commands.get(key))).isTrue();
+        });
+    }
+
     private List<String> randomizedAdd(
             RedisCommands<byte[], byte[]> commands,
             byte[] redisKeyBytes,
             HllV4 hll,
-            int num) {
+            int num,
+            int mod) {
         Random random = new Random();
 
         // dump elements when fail for small cardinality
@@ -114,7 +140,11 @@ public class HllV4Integration {
         List<String> buffer = new ArrayList<>(10);
 
         for (int i = 0; i < num; i++) {
-            String element = String.valueOf(random.nextInt());
+            int n = random.nextInt();
+            if (mod > 0) {
+                n %= mod;
+            }
+            String element = String.valueOf(n);
             buffer.add(element);
             if (dumpEnabled) {
                 elements.add(element);
