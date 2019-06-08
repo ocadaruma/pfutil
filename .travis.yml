@@ -4,7 +4,10 @@ services:
   - docker
 
 env:
-  - TEST_IT=1
+  - TEST_IT_REDIS4=1
+  - TEST_IT_REDIS5=1
+  - REDIS4_PORT=6379
+  - REDIS5_PORT=6380
 
 language: java
 
@@ -19,7 +22,9 @@ install: true
 
 before_install:
   - docker pull redis:4.0.14
+  - docker pull redis:5.0.5
   - docker run --name redis4 -d -p 6379:6379 redis:4.0.14
+  - docker run --name redis5 -d -p 6380:6379 redis:5.0.5
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
