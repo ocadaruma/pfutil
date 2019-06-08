@@ -13,7 +13,7 @@ Maven:
 <dependency>
   <groupId>com.mayreh</groupId>
   <artifactId>pfutil</artifactId>
-  <version>0.0.2</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
@@ -21,7 +21,7 @@ Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.mayreh:pfutil:0.0.2'
+    compile 'com.mayreh:pfutil:0.1.0'
 }
 ```
 
