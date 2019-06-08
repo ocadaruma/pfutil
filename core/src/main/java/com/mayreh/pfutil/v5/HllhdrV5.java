@@ -5,7 +5,7 @@ import com.mayreh.pfutil.HllEncoding;
 import com.mayreh.pfutil.HllUtil;
 
 /**
- * A HLL representation compatible with Redis V5 based on arXiv:1702.01284
+ * A HLL representation compatible with Redis 5 based on arXiv:1702.01284
  */
 class HllhdrV5 extends HllByteBuffer {
     private static final int HLL_Q;
