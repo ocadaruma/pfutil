@@ -13,7 +13,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class HllV4Integration {
     private boolean shouldSkip() {
-        return System.getenv("TEST_IT") == null;
+        return System.getenv("TEST_IT_REDIS4") == null;
+    }
+
+    private int port() {
+        return Integer.parseInt(
+                System.getenv().getOrDefault("REDIS4_PORT", "6379"));
     }
 
     @Test
@@ -23,7 +28,7 @@ public class HllV4Integration {
         }
 
         System.out.println("start small cardinality integration...");
-        RedisUtil.withRedis(commands -> {
+        RedisUtil.withRedis(port(), commands -> {
             List<String> elements;
             byte[] key;
 
@@ -72,7 +77,7 @@ public class HllV4Integration {
         }
 
         System.out.println("start large cardinality integration...");
-        RedisUtil.withRedis(commands -> {
+        RedisUtil.withRedis(port(), commands -> {
             byte[] key;
 
             key = "pfutil:it100000".getBytes();
@@ -106,7 +111,7 @@ public class HllV4Integration {
         }
 
         System.out.println("start large elements small cardinality integration...");
-        RedisUtil.withRedis(commands -> {
+        RedisUtil.withRedis(port(), commands -> {
             byte[] key;
 
             key = "pfutil:it1000000%100".getBytes();
