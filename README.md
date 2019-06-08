@@ -27,11 +27,28 @@ dependencies {
 
 ## Usage
 
+Create HLL data structure.
+
+Redis4 compatible:
+
 ```java
 import com.mayreh.pfutil.v4.HllV4;
-import java.nio.file.*;
 
 HllV4 hll = HllV4.newBuilder().build();
+```
+
+Redis5 compatible:
+
+```java
+import com.mayreh.pfutil.v5.HllV5;
+
+HllV5 hll = HllV5.newBuilder().build();
+```
+
+Estimate approx distinct count using HLL.
+
+```java
+import java.nio.file.*;
 
 hll.pfAdd("elementA".getBytes());
 hll.pfAdd("elementB".getBytes());
