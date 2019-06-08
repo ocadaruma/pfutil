@@ -4,10 +4,7 @@ services:
   - docker
 
 env:
-  - TEST_IT_REDIS4=1
-  - TEST_IT_REDIS5=1
-  - REDIS4_PORT=6379
-  - REDIS5_PORT=6380
+  - TEST_IT_REDIS4=1 TEST_IT_REDIS5=1 REDIS4_PORT=6379 REDIS5_PORT=6380
 
 language: java
 
