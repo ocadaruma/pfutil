@@ -1,4 +1,4 @@
-package com.mayreh.pfutil.v4;
+package com.mayreh.pfutil.v5;
 
 import com.mayreh.pfutil.RedisUtil;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -11,14 +11,14 @@ import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class HllV4Integration {
+public class HllV5Integration {
     private boolean shouldSkip() {
-        return System.getenv("TEST_IT_REDIS4") == null;
+        return System.getenv("TEST_IT_REDIS5") == null;
     }
 
     private int port() {
         return Integer.parseInt(
-                System.getenv().getOrDefault("REDIS4_PORT", "6379"));
+                System.getenv().getOrDefault("REDIS5_PORT", "6379"));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class HllV4Integration {
             byte[] key;
 
             key = "pfutil:it100".getBytes();
-            HllV4 hll100 = HllV4.newBuilder().build();
+            HllV5 hll100 = HllV5.newBuilder().build();
             commands.del(key);
             elements = randomizedAdd(commands, key, hll100, 100, -1);
 
@@ -42,7 +42,7 @@ public class HllV4Integration {
                     .isEqualTo(commands.pfcount(key).longValue());
 
             key = "pfutil:it1000".getBytes();
-            HllV4 hll1000 = HllV4.newBuilder().build();
+            HllV5 hll1000 = HllV5.newBuilder().build();
             commands.del(key);
             elements = randomizedAdd(commands, key, hll1000, 1000, -1);
 
@@ -51,7 +51,7 @@ public class HllV4Integration {
                     .isEqualTo(commands.pfcount(key).longValue());
 
             key = "pfutil:it10000".getBytes();
-            HllV4 hll10000 = HllV4.newBuilder().build();
+            HllV5 hll10000 = HllV5.newBuilder().build();
             commands.del(key);
             elements = randomizedAdd(commands, key, hll10000, 10000, -1);
 
@@ -81,14 +81,14 @@ public class HllV4Integration {
             byte[] key;
 
             key = "pfutil:it100000".getBytes();
-            HllV4 hll100000 = HllV4.newBuilder().build();
+            HllV5 hll100000 = HllV5.newBuilder().build();
             commands.del(key);
             randomizedAdd(commands, key, hll100000, 100000, -1);
 
             assertThat(hll100000.pfCount()).isEqualTo(commands.pfcount(key).longValue());
 
             key = "pfutil:it1000000".getBytes();
-            HllV4 hll1000000 = HllV4.newBuilder().build();
+            HllV5 hll1000000 = HllV5.newBuilder().build();
             commands.del(key);
             randomizedAdd(commands, key, hll1000000, 1000000, -1);
 
@@ -115,7 +115,7 @@ public class HllV4Integration {
             byte[] key;
 
             key = "pfutil:it1000000%100".getBytes();
-            HllV4 hll100 = HllV4.newBuilder().build();
+            HllV5 hll100 = HllV5.newBuilder().build();
 
             hll100.pfAdd("dummy".getBytes());
 
@@ -131,7 +131,7 @@ public class HllV4Integration {
     private List<String> randomizedAdd(
             RedisCommands<byte[], byte[]> commands,
             byte[] redisKeyBytes,
-            HllV4 hll,
+            HllV5 hll,
             int num,
             int mod) {
         Random random = new Random();
