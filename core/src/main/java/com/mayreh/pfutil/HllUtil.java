@@ -13,7 +13,7 @@ public class HllUtil {
         return 1.0;
     }
 
-    /**
+    /*
      * 64 bit version of MurmurHash2
      */
     public static long murmurHash64A(byte[] data, int seed) {

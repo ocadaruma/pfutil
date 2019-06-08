@@ -1,27 +1,26 @@
 package com.mayreh.pfutil.v4;
 
-import java.nio.ByteBuffer;
+import com.mayreh.pfutil.HllByteBuffer;
 
 /**
  * Provides Redis v4 compatible HLL features.
  * <p>
- * NOTE: This class is NOT thread-safe since every operation possibly mutates underlying byte array as in original C-implementation.
+ * NOTE: This class is NOT thread safe as in original C-implementation.
  * </p>
  */
 public class HllV4 {
-    private final Hllhdr hllhdr;
+    private final HllhdrV4 hllhdr;
 
-    HllV4(Config config, byte[] representation) {
-        ByteBuffer hdrBuffer = ByteBuffer.wrap(representation);
-        hllhdr = new Hllhdr(config, hdrBuffer);
+    HllV4(byte[] representation) {
+        hllhdr = new HllhdrV4(representation);
 
-        if (!hllhdr.isValidHllObject()) {
+        if (!hllhdr.isValidHll()) {
             throw new IllegalArgumentException("Invalid HLL representation");
         }
     }
 
-    HllV4(Config config) {
-        hllhdr = new Hllhdr(config);
+    HllV4() {
+        hllhdr = new HllhdrV4();
     }
 
     /**
@@ -30,42 +29,36 @@ public class HllV4 {
      * @return approximate distinct count
      */
     public long pfCount() {
-        if (hllhdr.getHeader().isValidCache()) {
-            return hllhdr.getHeader().getCardinality();
+        if (hllhdr.isValidCache()) {
+            return hllhdr.getCache();
         } else {
-            Hllhdr.HllCountResult result = hllhdr.hllCount();
-            if (!result.isValid()) {
+            HllhdrV4.CountResult result = hllhdr.hllCount();
+            if (!result.valid) {
                 throw new IllegalStateException("hllCount result is invalid");
             }
 
-            hllhdr.setCache(result.getCount());
-            return result.getCount();
+            hllhdr.setCache(result.count);
+            return result.count;
         }
     }
 
     /**
      * Do PFADD using mostly same algorithm as of Redis v4.
      * <p>
-     * See {@link Hllhdr#hllAdd(byte[])} for the differences.
+     * See {@link HllByteBuffer#hllSet(int, int)} for the differences.
      * </p>
      *
      * @param element the element to be added to HLL
      * @return whether HLL internal register was updated or not
      */
     public boolean pfAdd(byte[] element) {
-        int retVal = hllhdr.hllAdd(element);
-        if (retVal > 0) {
-            hllhdr.invalidateCache();
-            return true;
-        } else {
-            return false;
-        }
+        return hllhdr.hllAdd(element);
     }
 
     /**
      * Do PFMERGE using mostly same algorithm as of Redis v4.
      * <p>
-     * See {@link Hllhdr#hllMerge(Hllhdr...)} for the differences.
+     * See {@link HllByteBuffer#hllMerge(HllByteBuffer...)} for the differences.
      * </p>
      *
      * @param others HLLs to be merged
@@ -75,7 +68,7 @@ public class HllV4 {
         if (others.length < 1) {
             return this;
         }
-        Hllhdr[] otherHlls = new Hllhdr[others.length];
+        HllhdrV4[] otherHlls = new HllhdrV4[others.length];
         for (int i = 0; i < others.length; i++) {
             otherHlls[i] = others[i].hllhdr;
         }
@@ -105,19 +98,10 @@ public class HllV4 {
     }
 
     public static class HllV4Builder {
-        private Config config = null;
         private byte[] representation = null;
 
         private HllV4Builder() {
         }
-
-        ////////////////////////////////
-        // Currently commented out because modifying default configuration is not fully tested
-        ////////////////////////////////
-        // public HllV4Builder withConfig(Config config) {
-        //     this.config = config;
-        //     return this;
-        // }
 
         /**
          * Restore HHL data structure from representation byte array
@@ -131,13 +115,10 @@ public class HllV4 {
         }
 
         public HllV4 build() {
-            if (config == null) {
-                config = Config.DEFAULT;
-            }
             if (representation == null) {
-                return new HllV4(config);
+                return new HllV4();
             } else {
-                return new HllV4(config, representation);
+                return new HllV4(representation);
             }
         }
     }
