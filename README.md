@@ -69,4 +69,24 @@ $ redis-cli PFCOUNT foo
 (integer) 3
 ```
 
-See also [example project](https://github.com/ocadaruma/pfutil/tree/master/example).
+See also [example project](https://github.com/ocadaruma/pfutil/tree/develop/example).
+
+## Performance
+
+- Machine: ThinkPad T470s
+  - Intel(R) Core(TM) i7-7600U CPU @ 2.80GHz
+  - 24GB RAM
+- OS: Ubuntu 18.04.2 LTS
+- JDK: openjdk version "11.0.3"
+
+```
+Benchmark                Mode  Cnt         Score         Error  Units
+HllBenchmark.pfAddV4    thrpt   10  13140894.909 ± 2167628.883  ops/s
+HllBenchmark.pfAddV5    thrpt   10  13668326.241 ± 2845088.571  ops/s
+HllBenchmark.pfCountV4  thrpt   10      6907.240 ±    3397.389  ops/s
+HllBenchmark.pfCountV5  thrpt   10     10575.651 ±    5598.243  ops/s
+HllBenchmark.pfMergeV4  thrpt   10      3088.310 ±     589.666  ops/s
+HllBenchmark.pfMergeV5  thrpt   10      2854.870 ±     662.526  ops/s
+```
+
+See [benchmark](https://github.com/ocadaruma/pfutil/tree/develop/benchmark) for the details.
