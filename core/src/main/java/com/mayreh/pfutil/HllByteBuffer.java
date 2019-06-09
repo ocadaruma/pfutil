@@ -174,9 +174,10 @@ public abstract class HllByteBuffer {
 
     /**
      * Set specified register to given value.
-     *
+     * <p>
      * NOTE: Unlike original Redis implementation, the representation always be promoted to
      * dense representation regardless of current encoding for simplification.
+     * </p>
      *
      * @param regNum register number
      * @param len patLen count

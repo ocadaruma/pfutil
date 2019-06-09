@@ -5,7 +5,7 @@ import com.mayreh.pfutil.HllByteBuffer;
 /**
  * Provides Redis v4 compatible HLL features.
  * <p>
- * NOTE: This class is NOT thread safe as in original C-implementation.
+ * NOTE: This class is NOT thread safe. Concurrent accesses may cause inconsistent result.
  * </p>
  */
 public class HllV4 {
